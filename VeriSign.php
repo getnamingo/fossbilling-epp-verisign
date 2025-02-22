@@ -45,11 +45,6 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         if(isset($options['ssl_ca'])) {
             $this->config['ssl_ca'] = $options['ssl_ca'];
         }
-        if(isset($options['min_data_set'])) {
-            $this->config['min_data_set'] = (bool)$options['min_data_set'];
-        } else {
-            $this->config['min_data_set'] = false;
-        }
         if(isset($options['use_tls_12'])) {
             $this->config['use_tls_12'] = (bool)$options['use_tls_12'];
         } else {
@@ -106,11 +101,6 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                 'ssl_ca' => array('text', array(
                     'label' => 'SSL CA Path',
                     'required' => false,
-                ),
-                ),
-                'min_data_set' => array('radio', array(
-                    'multiOptions' => array('1'=>'Yes', '0'=>'No'),
-                    'label' => 'Enable Minimum Data Set',
                 ),
                 ),
                 'use_tls_12' => array('radio', array(
@@ -533,78 +523,6 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                 throw new Registrar_Exception($r->cd[0]->name . ' ' . $reason);
             }
             
-            if ($this->config['min_data_set'] === false) {
-                // contact:create
-                $from = $to = array();
-                $from[] = '/{{ id }}/';
-                $c_id = strtoupper($this->generateRandomString());
-                $to[] = $c_id;
-                $from[] = '/{{ name }}/';
-                $to[] = htmlspecialchars($client->getFirstName() . ' ' . $client->getLastName());
-                $from[] = '/{{ org }}/';
-                $to[] = htmlspecialchars($client->getCompany());
-                $from[] = '/{{ street1 }}/';
-                $to[] = htmlspecialchars($client->getAddress1());
-                $from[] = '/{{ city }}/';
-                $to[] = htmlspecialchars($client->getCity());
-                $from[] = '/{{ state }}/';
-                $to[] = htmlspecialchars($client->getState());
-                $from[] = '/{{ postcode }}/';
-                $to[] = htmlspecialchars($client->getZip());
-                $from[] = '/{{ country }}/';
-                $to[] = htmlspecialchars($client->getCountry());
-                $from[] = '/{{ phonenumber }}/';
-                $to[] = htmlspecialchars('+'.$client->getTelCc().'.'.$client->getTel());
-                $from[] = '/{{ email }}/';
-                $to[] = htmlspecialchars($client->getEmail());
-                $from[] = '/{{ authInfo }}/';
-                $to[] = htmlspecialchars($this->generateObjectPW());
-                $from[] = '/{{ clTRID }}/';
-                $clTRID = str_replace('.', '', round(microtime(1), 3));
-                $to[] = htmlspecialchars($this->config['registrarprefix'] . '-contact-create-' . $clTRID);
-                $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-          <command>
-            <create>
-              <contact:create
-               xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
-                <contact:id>{{ id }}</contact:id>
-                <contact:postalInfo type="int">
-                  <contact:name>{{ name }}</contact:name>
-                  <contact:org>{{ org }}</contact:org>
-                  <contact:addr>
-                    <contact:street>{{ street1 }}</contact:street>
-                    <contact:street></contact:street>
-                    <contact:street></contact:street>
-                    <contact:city>{{ city }}</contact:city>
-                    <contact:sp>{{ state }}</contact:sp>
-                    <contact:pc>{{ postcode }}</contact:pc>
-                    <contact:cc>{{ country }}</contact:cc>
-                  </contact:addr>
-                </contact:postalInfo>
-                <contact:voice>{{ phonenumber }}</contact:voice>
-                <contact:fax></contact:fax>
-                <contact:email>{{ email }}</contact:email>
-                <contact:authInfo>
-                  <contact:pw>{{ authInfo }}</contact:pw>
-                </contact:authInfo>
-              </contact:create>
-            </create>
-            <extension>
-              <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-                <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
-              </namestoreExt:namestoreExt>
-            </extension>
-            <clTRID>{{ clTRID }}</clTRID>
-          </command>
-        </epp>');
-                $r = $this->write($xml, __FUNCTION__);
-                $r = $r->response->resData->children('urn:ietf:params:xml:ns:contact-1.0')->creData;
-                $contacts = $r->id;
-            }
-
             //host create
             foreach (['ns1', 'ns2', 'ns3', 'ns4'] as $ns) {
                 if ($domain->{'get' . ucfirst($ns)}()) {
@@ -702,16 +620,6 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from[] = '/{{ ns4 }}/';
             $to[] = '';
             }
-            if ($this->config['min_data_set'] === false) {
-                $from[] = '/{{ cID_1 }}/';
-                $to[] = htmlspecialchars($contacts);
-                $from[] = '/{{ cID_2 }}/';
-                $to[] = htmlspecialchars($contacts);
-                $from[] = '/{{ cID_3 }}/';
-                $to[] = htmlspecialchars($contacts);
-                $from[] = '/{{ cID_4 }}/';
-                $to[] = htmlspecialchars($contacts);
-            }
             $from[] = '/{{ authInfo }}/';
             $to[] = htmlspecialchars($this->generateObjectPW());
             $from[] = '/{{ clTRID }}/';
@@ -719,15 +627,6 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-create-' . $clTRID);
             $from[] = "/<\w+:\w+>\s*<\/\w+:\w+>\s+/ims";
             $to[] = '';
-            
-            $contact_section = '';
-            if ($this->config['min_data_set'] === false) {
-                $contact_section = '
-                    <domain:registrant>{{ cID_1 }}</domain:registrant>
-                    <domain:contact type="admin">{{ cID_2 }}</domain:contact>
-                    <domain:contact type="tech">{{ cID_3 }}</domain:contact>
-                    <domain:contact type="billing">{{ cID_4 }}</domain:contact>';
-            }
 
             $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
             <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
@@ -744,7 +643,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                       <domain:hostObj>{{ ns2 }}</domain:hostObj>
                       <domain:hostObj>{{ ns3 }}</domain:hostObj>
                       <domain:hostObj>{{ ns4 }}</domain:hostObj>
-                    </domain:ns>' . $contact_section . '
+                    </domain:ns>
                     <domain:authInfo>
                       <domain:pw>{{ authInfo }}</domain:pw>
                     </domain:authInfo>
@@ -861,331 +760,21 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
     {
         $this->getLog()->debug('Updating contact info: ' . $domain->getName());
 
-        if ($this->config['min_data_set'] === true) {
-            throw new Registrar_Exception("Contact update not possible as the Minimum Data Set is enabled.");
-        }
-
-        $client = $domain->getContactRegistrar();
-        $return = array();
-        try {
-            $s    = $this->connect();
-            $this->login();
-            $from = $to = array();
-            $from[] = '/{{ name }}/';
-            $to[] = htmlspecialchars($domain->getName());
-            $from[] = '/{{ clTRID }}/';
-            $clTRID = str_replace('.', '', round(microtime(1), 3));
-            $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
-            $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-      <command>
-        <info>
-          <domain:info
-           xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"
-           xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-            <domain:name hosts="all">{{ name }}</domain:name>
-          </domain:info>
-        </info>
-        <extension>
-          <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
-          </namestoreExt:namestoreExt>
-        </extension>
-        <clTRID>{{ clTRID }}</clTRID>
-      </command>
-    </epp>');
-            $r = $this->write($xml, __FUNCTION__);
-            $r = $r->response->resData->children('urn:ietf:params:xml:ns:domain-1.0')->infData;
-            $registrant = (string)$r->registrant;
-            $from = $to = array();
-            $from[] = '/{{ id }}/';
-            $to[] = $registrant;
-            $from[] = '/{{ name }}/';
-            $to[] = htmlspecialchars($client->getFirstName() . ' ' . $client->getLastName());
-            $from[] = '/{{ org }}/';
-            $to[] = htmlspecialchars($client->getCompany());
-            $from[] = '/{{ street1 }}/';
-            $to[] = htmlspecialchars($client->getAddress1());
-            $from[] = '/{{ street2 }}/';
-            $to[] = htmlspecialchars($client->getAddress2());
-            $from[] = '/{{ city }}/';
-            $to[] = htmlspecialchars($client->getCity());
-            $from[] = '/{{ state }}/';
-            $to[] = htmlspecialchars($client->getState());
-            $from[] = '/{{ postcode }}/';
-            $to[] = htmlspecialchars($client->getZip());
-            $from[] = '/{{ country }}/';
-            $to[] = htmlspecialchars($client->getCountry());
-            $from[] = '/{{ phonenumber }}/';
-            $to[] = htmlspecialchars('+'.$client->getTelCc().'.'.$client->getTel());
-            $from[] = '/{{ email }}/';
-            $to[] = htmlspecialchars($client->getEmail());
-            $from[] = '/{{ clTRID }}/';
-            $clTRID = str_replace('.', '', round(microtime(1), 3));
-            $to[] = htmlspecialchars($this->config['registrarprefix'] . '-contact-update-' . $clTRID);
-            $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-  <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-    <command>
-      <update>
-        <contact:update
-         xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
-          <contact:id>{{ id }}</contact:id>
-          <contact:chg>
-            <contact:postalInfo type="int">
-              <contact:name>{{ name }}</contact:name>
-              <contact:org>{{ org }}</contact:org>
-              <contact:addr>
-                <contact:street>{{ street1 }}</contact:street>
-                <contact:street>{{ street2 }}</contact:street>
-                <contact:street></contact:street>
-                <contact:city>{{ city }}</contact:city>
-                <contact:sp>{{ state }}</contact:sp>
-                <contact:pc>{{ postcode }}</contact:pc>
-                <contact:cc>{{ country }}</contact:cc>
-              </contact:addr>
-            </contact:postalInfo>
-            <contact:voice>{{ phonenumber }}</contact:voice>
-            <contact:fax></contact:fax>
-            <contact:email>{{ email }}</contact:email>
-          </contact:chg>
-        </contact:update>
-      </update>
-      <extension>
-        <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-          <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
-        </namestoreExt:namestoreExt>
-      </extension>
-      <clTRID>{{ clTRID }}</clTRID>
-    </command>
-</epp>');
-            $r = $this->write($xml, __FUNCTION__);
-        }
-
-        catch(exception $e) {
-            $return = array(
-                'error' => $e->getMessage()
-            );
-        }
-
-        if (!empty($s)) {
-            $this->logout();
-        }
-
-        return $return;
+        throw new Registrar_Exception("Registry does not support contacts.");
     }
     
     public function enablePrivacyProtection(Registrar_Domain $domain)
     {
         $this->getLog()->debug('Enabling Privacy protection: ' . $domain->getName());
-        $return = array();
-        $processedContacts = [];
 
-        try {
-            $s    = $this->connect();
-            $this->login();
-            $from = $to = array();
-            $from[] = '/{{ name }}/';
-            $to[] = htmlspecialchars($domain->getName());
-            $from[] = '/{{ clTRID }}/';
-            $clTRID = str_replace('.', '', round(microtime(1), 3));
-            $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
-            $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-      <command>
-        <info>
-          <domain:info
-           xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"
-           xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-            <domain:name hosts="all">{{ name }}</domain:name>
-          </domain:info>
-        </info>
-        <extension>
-          <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
-          </namestoreExt:namestoreExt>
-        </extension>
-        <clTRID>{{ clTRID }}</clTRID>
-      </command>
-    </epp>');
-            $r = $this->write($xml, __FUNCTION__);
-            $r = $r->response->resData->children('urn:ietf:params:xml:ns:domain-1.0')->infData;
-            $dcontact = array();
-            $dcontact['registrant'] = (string)$r->registrant;
-            foreach($r->contact as $e) {
-                $type = (string)$e->attributes()->type;
-                $dcontact[$type] = (string)$e;
-            }
-
-            $contact = array();
-            foreach($dcontact as $id) {
-                // If the contact ID has already been processed, skip the update
-                if (in_array($id, $processedContacts)) {
-                    continue;
-                }
-                $from = $to = array();
-                $from[] = '/{{ id }}/';
-                $to[] = htmlspecialchars($id);
-                $from[] = '/{{ flag }}/';
-                $to[] = 0;
-                $from[] = '/{{ clTRID }}/';
-                $clTRID = str_replace('.', '', round(microtime(1) , 3));
-                $to[] = htmlspecialchars($this->config['registrarprefix'] . '-contact-update-' . $clTRID);
-                $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-      <command>
-        <update>
-          <contact:update xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd">
-            <contact:id>{{ id }}</contact:id>
-            <contact:chg>
-              <contact:disclose flag="{{ flag }}">
-                <contact:name type="int"/>
-                <contact:addr type="int"/>
-                <contact:org type="int"/>
-                <contact:voice/>
-                <contact:fax/>
-                <contact:email/>
-              </contact:disclose>
-            </contact:chg>
-          </contact:update>
-        </update>
-        <extension>
-          <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
-          </namestoreExt:namestoreExt>
-        </extension>
-        <clTRID>{{ clTRID }}</clTRID>
-      </command>
-    </epp>');
-                $r = $this->write($xml, __FUNCTION__);
-                
-                // Mark this contact ID as processed to avoid duplicate updates
-                $processedContacts[] = $id;
-            }
-        }
-
-        catch(exception $e) {
-            $return = array(
-                'error' => $e->getMessage()
-            );
-        }
-
-        if (!empty($s)) {
-            $this->logout();
-        }
-
-        return $return;
+        throw new Registrar_Exception("Registry does not support contacts.");
     }
     
     public function disablePrivacyProtection(Registrar_Domain $domain)
     {
         $this->getLog()->debug('Disabling Privacy protection: ' . $domain->getName());
-        $return = array();
-        $processedContacts = [];
 
-        try {
-            $s    = $this->connect();
-            $this->login();
-            $from = $to = array();
-            $from[] = '/{{ name }}/';
-            $to[] = htmlspecialchars($domain->getName());
-            $from[] = '/{{ clTRID }}/';
-            $clTRID = str_replace('.', '', round(microtime(1), 3));
-            $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
-            $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-      <command>
-        <info>
-          <domain:info
-           xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"
-           xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-            <domain:name hosts="all">{{ name }}</domain:name>
-          </domain:info>
-        </info>
-        <extension>
-          <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
-          </namestoreExt:namestoreExt>
-        </extension>
-        <clTRID>{{ clTRID }}</clTRID>
-      </command>
-    </epp>');
-            $r = $this->write($xml, __FUNCTION__);
-            $r = $r->response->resData->children('urn:ietf:params:xml:ns:domain-1.0')->infData;
-            $dcontact = array();
-            $dcontact['registrant'] = (string)$r->registrant;
-            foreach($r->contact as $e) {
-                $type = (string)$e->attributes()->type;
-                $dcontact[$type] = (string)$e;
-            }
-
-            $contact = array();
-            foreach($dcontact as $id) {
-                // If the contact ID has already been processed, skip the update
-                if (in_array($id, $processedContacts)) {
-                    continue;
-                }
-                $from = $to = array();
-                $from[] = '/{{ id }}/';
-                $to[] = htmlspecialchars($id);
-                $from[] = '/{{ flag }}/';
-                $to[] = 1;
-                $from[] = '/{{ clTRID }}/';
-                $clTRID = str_replace('.', '', round(microtime(1) , 3));
-                $to[] = htmlspecialchars($this->config['registrarprefix'] . '-contact-update-' . $clTRID);
-                $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-      <command>
-        <update>
-          <contact:update xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd">
-            <contact:id>{{ id }}</contact:id>
-            <contact:chg>
-              <contact:disclose flag="{{ flag }}">
-                <contact:name type="int"/>
-                <contact:addr type="int"/>
-                <contact:org type="int"/>
-                <contact:voice/>
-                <contact:fax/>
-                <contact:email/>
-              </contact:disclose>
-            </contact:chg>
-          </contact:update>
-        </update>
-        <extension>
-          <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
-          </namestoreExt:namestoreExt>
-        </extension>
-        <clTRID>{{ clTRID }}</clTRID>
-      </command>
-    </epp>');
-                $r = $this->write($xml, __FUNCTION__);
-                
-                // Mark this contact ID as processed to avoid duplicate updates
-                $processedContacts[] = $id;
-            }
-        }
-
-        catch(exception $e) {
-            $return = array(
-                'error' => $e->getMessage()
-            );
-        }
-
-        if (!empty($s)) {
-            $this->logout();
-        }
-
-        return $return;
+        throw new Registrar_Exception("Registry does not support contacts.");
     }
 
     public function getEpp(Registrar_Domain $domain)

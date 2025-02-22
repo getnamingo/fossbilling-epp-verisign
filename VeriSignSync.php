@@ -167,76 +167,6 @@ try {
             $stmt->bindValue(':expires_at', $formattedExDate);
             $stmt->bindValue(':service_id', $serviceId);
             $stmt->execute();
-            
-            if ($count > 0) {
-                $stmt = $pdo->prepare('SELECT registrant_contact_id FROM domain_meta WHERE domain_id = :id');
-                $stmt->bindValue(':id', $serviceId);
-                $stmt->execute();
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                $registrant_contact_id = $result['registrant_contact_id'];
-
-                $contact_params = ["contact" => $registrant_contact_id];
-                $contactInfo = $epp->contactInfo($contact_params);
-            
-                if (array_key_exists('error', $contactInfo))
-                {
-                    echo 'ContactInfo Error: ' . $contactInfo['error'] . PHP_EOL;
-                }
-                else
-                {
-                    try {
-                        // Prepare the UPDATE statement
-                        $stmt = $pdo->prepare('
-                            UPDATE service_domain 
-                            SET 
-                                contact_email = :contact_email,
-                                contact_company = :contact_company,
-                                contact_first_name = :contact_first_name,
-                                contact_last_name = :contact_last_name,
-                                contact_address1 = :contact_address1,
-                                contact_address2 = :contact_address2,
-                                contact_city = :contact_city,
-                                contact_state = :contact_state,
-                                contact_postcode = :contact_postcode,
-                                contact_country = :contact_country,
-                                contact_phone_cc = :contact_phone_cc,
-                                contact_phone = :contact_phone
-                            WHERE id = :id
-                        ');
-
-                        // Split name into first and last names
-                        $nameParts = explode(' ', $contactInfo['name']);
-                        $contactFirstName = array_shift($nameParts); // First part of the name
-                        $contactLastName = implode(' ', $nameParts); // Remaining parts as the last name
-
-                        // Split phone into country code and number
-                        $phoneParts = explode('.', $contactInfo['voice']);
-                        $contactPhoneCC = isset($phoneParts[0]) ? $phoneParts[0] : null;
-                        $contactPhone = isset($phoneParts[1]) ? $phoneParts[1] : null;
-
-                        // Bind values, setting them to NULL if they are empty
-                        $stmt->bindValue(':contact_email', !empty($contactInfo['email']) ? $contactInfo['email'] : null);
-                        $stmt->bindValue(':contact_company', !empty($contactInfo['org']) ? $contactInfo['org'] : null);
-                        $stmt->bindValue(':contact_first_name', !empty($contactFirstName) ? $contactFirstName : null);
-                        $stmt->bindValue(':contact_last_name', !empty($contactLastName) ? $contactLastName : null);
-                        $stmt->bindValue(':contact_address1', !empty($contactInfo['street1']) ? $contactInfo['street1'] : null);
-                        $stmt->bindValue(':contact_address2', !empty($contactInfo['street2']) ? $contactInfo['street2'] : null);
-                        $stmt->bindValue(':contact_city', !empty($contactInfo['city']) ? $contactInfo['city'] : null);
-                        $stmt->bindValue(':contact_state', !empty($contactInfo['state']) ? $contactInfo['state'] : null);
-                        $stmt->bindValue(':contact_postcode', !empty($contactInfo['postal']) ? $contactInfo['postal'] : null);
-                        $stmt->bindValue(':contact_country', !empty($contactInfo['country']) ? $contactInfo['country'] : null);
-                        $stmt->bindValue(':contact_phone_cc', !empty($contactPhoneCC) ? $contactPhoneCC : null);
-                        $stmt->bindValue(':contact_phone', !empty($contactPhone) ? $contactPhone : null);
-                        $stmt->bindValue(':id', $serviceId);
-                        $stmt->execute();
-                        
-                        echo "Update successful for contact: ".$contactInfo['id'].PHP_EOL;
-
-                    } catch (PDOException $e) {
-                        exit("Database error: " . $e->getMessage().PHP_EOL);
-                    }
-                }
-            }
         }
        
         if ($count > 0) {
@@ -260,19 +190,11 @@ try {
             $stmtMeta = $pdo->prepare($sqlMeta);
             $stmtMeta->bindValue(':domain_id', $domainId);
             $stmtMeta->bindValue(':registry_domain_id', $domainInfo['roid']);
-            $stmtMeta->bindValue(':registrant_contact_id', $domainInfo['registrant']);
+            $registrant_contact_id = null;
             $admin_contact_id = null;
             $tech_contact_id = null;
             $billing_contact_id = null;
-            foreach ($domainInfo['contact'] as $contact) {
-                if ($contact['type'] === 'admin') {
-                    $admin_contact_id = $contact['id'];
-                } elseif ($contact['type'] === 'tech') {
-                    $tech_contact_id = $contact['id'];
-                } elseif ($contact['type'] === 'billing') {
-                    $billing_contact_id = $contact['id'];
-                }
-            }
+            $stmtMeta->bindValue(':registrant_contact_id', $registrant_contact_id);
             $stmtMeta->bindValue(':admin_contact_id', $admin_contact_id);
             $stmtMeta->bindValue(':tech_contact_id', $tech_contact_id);
             $stmtMeta->bindValue(':billing_contact_id', $billing_contact_id);
@@ -689,120 +611,6 @@ class eppClient
                 'upDate' => $upDate,
                 'exDate' => $exDate,
                 'trDate' => $trDate,
-                'authInfo' => $authInfo
-            );
-        } catch (\Exception $e) {
-            $return = array(
-                'error' => $e->getMessage()
-            );
-        }
-
-        return $return;
-    }
-
-    /**
-     * contactInfo
-     */
-    public function contactInfo($params = array())
-    {
-        if (!$this->isLoggedIn) {
-            return array(
-                'code' => 2002,
-                'msg' => 'Command use error'
-            );
-        }
-
-        $return = array();
-        try {
-            $from = $to = array();
-            $from[] = '/{{ id }}/';
-            $to[] = htmlspecialchars($params['contact']);
-            $from[] = '/{{ authInfo }}/';
-            $authInfo = (isset($params['authInfoPw']) ? "<contact:authInfo>\n<contact:pw><![CDATA[{$params['authInfoPw']}]]></contact:pw>\n</contact:authInfo>" : '');
-            $to[] = $authInfo;
-            $from[] = '/{{ clTRID }}/';
-            $microtime = str_replace('.', '', round(microtime(1), 3));
-            $to[] = htmlspecialchars($this->prefix . '-contact-info-' . $microtime);
-            $from[] = "/<\w+:\w+>\s*<\/\w+:\w+>\s+/ims";
-            $to[] = '';
-            $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-  <command>
-    <info>
-      <contact:info
-       xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
-        <contact:id>{{ id }}</contact:id>
-        {{ authInfo }}
-      </contact:info>
-    </info>
-    <extension>
-      <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-        <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
-      </namestoreExt:namestoreExt>
-    </extension>
-    <clTRID>{{ clTRID }}</clTRID>
-  </command>
-</epp>');
-            $r = $this->writeRequest($xml);
-            $code = (int)$r->response->result->attributes()->code;
-            $msg = (string)$r->response->result->msg;
-            $r = $r->response->resData->children('urn:ietf:params:xml:ns:contact-1.0')->infData[0];
-
-            foreach ($r->postalInfo as $e) {
-                $name = (string)$e->name;
-                $org = (string)$e->org;
-                $street1 = $street2 = $street3 = '';
-                for ($i = 0; $i <= 2; $i++) {
-                    ${'street' . ($i + 1)} = (string)$e->addr->street[$i];
-                }
-                $city = (string)$e->addr->city;
-                $state = (string)$e->addr->sp;
-                $postal = (string)$e->addr->pc;
-                $country = (string)$e->addr->cc;
-            }
-            $id = (string)$r->id;
-            $status = array();
-            $i = 0;
-            foreach ($r->status as $e) {
-                $i++;
-                $status[$i] = (string)$e->attributes()->s;
-            }
-            $roid = (string)$r->roid;
-            $voice = (string)$r->voice;
-            $fax = (string)$r->fax;
-            $email = (string)$r->email;
-            $clID = (string)$r->clID;
-            $crID = (string)$r->crID;
-            $crDate = (string)$r->crDate;
-            $upID = (string)$r->upID;
-            $upDate = (string)$r->upDate;
-            $authInfo = (string)$r->authInfo->pw;
-
-            $return = array(
-                'id' => $id,
-                'roid' => $roid,
-                'code' => $code,
-                'status' => $status,
-                'msg' => $msg,
-                'name' => $name,
-                'org' => $org,
-                'street1' => $street1,
-                'street2' => $street2,
-                'street3' => $street3,
-                'city' => $city,
-                'state' => $state,
-                'postal' => $postal,
-                'country' => $country,
-                'voice' => $voice,
-                'fax' => $fax,
-                'email' => $email,
-                'clID' => $clID,
-                'crID' => $crID,
-                'crDate' => $crDate,
-                'upID' => $upID,
-                'upDate' => $upDate,
                 'authInfo' => $authInfo
             );
         } catch (\Exception $e) {
