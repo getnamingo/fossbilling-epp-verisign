@@ -526,6 +526,9 @@ class eppClient
             $from[] = '/{{ clTRID }}/';
             $microtime = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->prefix . '-domain-info-' . $microtime);
+            $tld = strtoupper(str_replace('.', '', strstr($params['domainname'], '.')));
+            $from[] = '/{{ tld }}/';
+            $to[] = $tld;
             $from[] = "/<\w+:\w+>\s*<\/\w+:\w+>\s+/ims";
             $to[] = '';
             $xml = preg_replace($from, $to, '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -543,7 +546,7 @@ class eppClient
     </info>
     <extension>
       <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-        <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+        <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
       </namestoreExt:namestoreExt>
     </extension>
     <clTRID>{{ clTRID }}</clTRID>
