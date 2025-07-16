@@ -126,6 +126,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         $from = $to = array();
         $from[] = '/{{ name }}/';
         $to[] = htmlspecialchars($domain->getName());
+        $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+        $from[] = '/{{ tld }}/';
+        $to[]   = $tld;
         $from[] = '/{{ clTRID }}/';
         $clTRID = str_replace('.', '', round(microtime(1) , 3));
         $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-check-' . $clTRID);
@@ -143,7 +146,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             </check>
             <extension>
               <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-                <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+                <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
               </namestoreExt:namestoreExt>
             </extension>
             <clTRID>{{ clTRID }}</clTRID>
@@ -182,6 +185,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from = $to = array();
             $from[] = '/{{ name }}/';
             $to[] = htmlspecialchars($domain->getName());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
@@ -199,7 +205,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </info>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -251,6 +257,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                 $to[] = (empty($text) ? '' : "<domain:rem><domain:ns>\n{$text}</domain:ns></domain:rem>\n");
                 $from[] = '/{{ name }}/';
                 $to[] = htmlspecialchars($domain->getName());
+                $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+                $from[] = '/{{ tld }}/';
+                $to[]   = $tld;
                 $from[] = '/{{ clTRID }}/';
                 $clTRID = str_replace('.', '', round(microtime(1), 3));
                 $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-update-' . $clTRID);
@@ -270,7 +279,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </update>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -307,6 +316,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $to[] = htmlspecialchars($domain->getName());
             $from[] = '/{{ authInfo_pw }}/';
             $to[] = htmlspecialchars($domain->getEpp());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-transfer-' . $clTRID);
@@ -327,7 +339,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
     </transfer>
     <extension>
       <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-        <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+        <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
       </namestoreExt:namestoreExt>
     </extension>
     <clTRID>{{ clTRID }}</clTRID>
@@ -359,6 +371,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from = $to = array();
             $from[] = '/{{ name }}/';
             $to[] = htmlspecialchars($domain->getName());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
@@ -376,7 +391,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </info>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -439,6 +454,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from = $to = array();
             $from[] = '/{{ name }}/';
             $to[] = htmlspecialchars($domain->getName());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-delete-' . $clTRID);
@@ -455,7 +473,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
     </delete>
     <extension>
       <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-        <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+        <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
       </namestoreExt:namestoreExt>
     </extension>
     <clTRID>{{ clTRID }}</clTRID>
@@ -489,6 +507,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from = $to = array();
             $from[] = '/{{ name }}/';
             $to[] = htmlspecialchars($domain->getName());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-check-' . $clTRID);
@@ -506,7 +527,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </check>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -529,6 +550,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                     $from = $to = array();
                     $from[] = '/{{ name }}/';
                     $to[] = $domain->{'get' . ucfirst($ns)}();
+                    $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+                    $from[] = '/{{ tld }}/';
+                    $to[]   = $tld;
                     $from[] = '/{{ clTRID }}/';
                     $clTRID = str_replace('.', '', round(microtime(1), 3));
                     $to[] = htmlspecialchars($this->config['registrarprefix'] . '-host-check-' . $clTRID);
@@ -546,7 +570,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                         </check>
                         <extension>
                           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-                            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+                            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
                           </namestoreExt:namestoreExt>
                         </extension>
                         <clTRID>{{ clTRID }}</clTRID>
@@ -562,6 +586,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                     $from = $to = array();
                     $from[] = '/{{ name }}/';
                     $to[] = $domain->{'get' . ucfirst($ns)}();
+                    $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+                    $from[] = '/{{ tld }}/';
+                    $to[]   = $tld;
                     $from[] = '/{{ clTRID }}/';
                     $clTRID = str_replace('.', '', round(microtime(1), 3));
                     $to[] = htmlspecialchars($this->config['registrarprefix'] . '-host-create-' . $clTRID);
@@ -577,7 +604,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                           </host:create>
                           <extension>
                             <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-                              <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+                              <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
                             </namestoreExt:namestoreExt>
                           </extension>
                         <clTRID>{{ clTRID }}</clTRID>
@@ -622,6 +649,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             }
             $from[] = '/{{ authInfo }}/';
             $to[] = htmlspecialchars($this->generateObjectPW());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-create-' . $clTRID);
@@ -651,7 +681,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                 </create>
                 <extension>
                   <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-                    <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+                    <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
                   </namestoreExt:namestoreExt>
                 </extension>
                 <clTRID>{{ clTRID }}</clTRID>
@@ -684,6 +714,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from = $to = array();
             $from[] = '/{{ name }}/';
             $to[] = htmlspecialchars($domain->getName());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
@@ -701,7 +734,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </info>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -716,6 +749,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $to[] = htmlspecialchars($domain->getName());
             $from[] = '/{{ expDate }}/';
             $to[] = htmlspecialchars($expDate);
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-renew-' . $clTRID);
@@ -734,7 +770,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </renew>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -787,6 +823,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from = $to = array();
             $from[] = '/{{ name }}/';
             $to[] = htmlspecialchars($domain->getName());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
@@ -804,7 +843,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                 </info>
                 <extension>
                   <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-                    <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+                    <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
                   </namestoreExt:namestoreExt>
                 </extension>
                 <clTRID>{{ clTRID }}</clTRID>
@@ -843,6 +882,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from = $to = array();
             $from[] = '/{{ name }}/';
             $to[] = htmlspecialchars($domain->getName());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
@@ -860,7 +902,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </info>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -898,6 +940,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                 $to[] = (empty($text) ? '' : "<domain:add>\n{$text}</domain:add>\n");
                 $from[] = '/{{ name }}/';
                 $to[] = htmlspecialchars($domain->getName());
+                $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+                $from[] = '/{{ tld }}/';
+                $to[]   = $tld;
                 $from[] = '/{{ clTRID }}/';
                 $clTRID = str_replace('.', '', round(microtime(1), 3));
                 $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-update-' . $clTRID);
@@ -916,7 +961,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </update>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -949,6 +994,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
             $from = $to = array();
             $from[] = '/{{ name }}/';
             $to[] = htmlspecialchars($domain->getName());
+            $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+            $from[] = '/{{ tld }}/';
+            $to[]   = $tld;
             $from[] = '/{{ clTRID }}/';
             $clTRID = str_replace('.', '', round(microtime(1), 3));
             $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-info-' . $clTRID);
@@ -966,7 +1014,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </info>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
@@ -1004,6 +1052,9 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
                 $to[] = (empty($text) ? '' : "<domain:rem>\n{$text}</domain:rem>\n");
                 $from[] = '/{{ name }}/';
                 $to[] = htmlspecialchars($domain->getName());
+                $tld = strtoupper(str_replace('.', '', $domain->getTld()));
+                $from[] = '/{{ tld }}/';
+                $to[]   = $tld;
                 $from[] = '/{{ clTRID }}/';
                 $clTRID = str_replace('.', '', round(microtime(1), 3));
                 $to[] = htmlspecialchars($this->config['registrarprefix'] . '-domain-update-' . $clTRID);
@@ -1022,7 +1073,7 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
         </update>
         <extension>
           <namestoreExt:namestoreExt xmlns:namestoreExt="http://www.verisign-grs.com/epp/namestoreExt-1.1">
-            <namestoreExt:subProduct>dotCOM</namestoreExt:subProduct>
+            <namestoreExt:subProduct>dot{{ tld }}</namestoreExt:subProduct>
           </namestoreExt:namestoreExt>
         </extension>
         <clTRID>{{ clTRID }}</clTRID>
