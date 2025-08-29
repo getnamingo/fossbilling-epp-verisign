@@ -796,21 +796,21 @@ class Registrar_Adapter_VeriSign extends Registrar_AdapterAbstract
     {
         $this->getLog()->debug('Updating contact info: ' . $domain->getName());
 
-        throw new Registrar_Exception("Registry does not support contacts.");
+        throw new Registrar_Exception("To change contact information, please update your account profile.");
     }
     
     public function enablePrivacyProtection(Registrar_Domain $domain)
     {
         $this->getLog()->debug('Enabling Privacy protection: ' . $domain->getName());
 
-        throw new Registrar_Exception("Registry does not support contacts.");
+        throw new Registrar_Exception("To change contact information, please update your account profile.");
     }
     
     public function disablePrivacyProtection(Registrar_Domain $domain)
     {
         $this->getLog()->debug('Disabling Privacy protection: ' . $domain->getName());
 
-        throw new Registrar_Exception("Registry does not support contacts.");
+        throw new Registrar_Exception("To change contact information, please update your account profile.");
     }
 
     public function getEpp(Registrar_Domain $domain)
